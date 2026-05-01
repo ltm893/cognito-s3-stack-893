@@ -4,7 +4,7 @@
 set -e
 
 STACK_NAME="MileageTrackerStack"
-REPO_ROOT="$(cd "$(dirname "$0")/../../.." && pwd)"
+REPO_ROOT="$(cd "$(dirname "$0")/../../../.." && pwd)"
 AWS_REGION=$(node -e "const b=require('${REPO_ROOT}/base_outputs.json'); console.log(b.aws_region)" 2>/dev/null || echo "us-east-1")
 
 echo ""

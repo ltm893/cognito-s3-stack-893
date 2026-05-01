@@ -208,13 +208,13 @@ export class MileageTrackerStack extends cdk.Stack {
     expense.addMethod("DELETE", new apigateway.LambdaIntegration(expensesLambda), auth);
 
     // ── Outputs ───────────────────────────────────────────────────────────────
-    new cdk.CfnOutput(this, "ApiUrl",          { value: api.url });
-    new cdk.CfnOutput(this, "UserPoolId",       { value: userPool.userPoolId });
-    new cdk.CfnOutput(this, "AppClientId",      { value: appClient.userPoolClientId });
-    new cdk.CfnOutput(this, "IdentityPoolId",   { value: identityPool.ref });
-    new cdk.CfnOutput(this, "ReceiptsBucket",   { value: receiptsBucket.bucketName });
-    new cdk.CfnOutput(this, "VehiclesTable",    { value: vehiclesTable.tableName });
-    new cdk.CfnOutput(this, "TripsTable",       { value: tripsTable.tableName });
-    new cdk.CfnOutput(this, "ExpensesTable",    { value: expensesTable.tableName });
+    new cdk.CfnOutput(this, "ApiUrlOutput",          { value: api.url,                       exportName: "ApiUrl" });
+    new cdk.CfnOutput(this, "UserPoolIdOutput",       { value: userPool.userPoolId,           exportName: "UserPoolId" });
+    new cdk.CfnOutput(this, "AppClientIdOutput",      { value: appClient.userPoolClientId,    exportName: "AppClientId" });
+    new cdk.CfnOutput(this, "IdentityPoolIdOutput",   { value: identityPool.ref,              exportName: "IdentityPoolId" });
+    new cdk.CfnOutput(this, "ReceiptsBucketOutput",   { value: receiptsBucket.bucketName,     exportName: "ReceiptsBucket" });
+    new cdk.CfnOutput(this, "VehiclesTableOutput",    { value: vehiclesTable.tableName,       exportName: "VehiclesTable" });
+    new cdk.CfnOutput(this, "TripsTableOutput",       { value: tripsTable.tableName,          exportName: "TripsTable" });
+    new cdk.CfnOutput(this, "ExpensesTableOutput",    { value: expensesTable.tableName,       exportName: "ExpensesTable" });
   }
 }
