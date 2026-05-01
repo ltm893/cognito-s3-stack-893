@@ -3,7 +3,6 @@
 # Deploys the Cognito + S3 base stack and writes base_outputs.json at repo root.
 set -e
 
-STACK_NAME="CognitoS3BaseStack"
 SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
 REPO_ROOT="$(cd "${SCRIPT_DIR}/../.." && pwd)"
 
@@ -21,9 +20,13 @@ if [ ! -f "${SCRIPT_DIR}/../bin/config.ts" ]; then
   exit 1
 fi
 
-# ── Read region from config ───────────────────────────────────────────────────
+# ── Read id + region from config ──────────────────────────────────────────────
 cd "${SCRIPT_DIR}/.."
+CONFIG_ID=$(node -e "const {config} = require('./bin/config'); console.log(config.id)" 2>/dev/null || echo "base")
 AWS_REGION=$(node -e "const {config} = require('./bin/config'); console.log(config.awsRegion)" 2>/dev/null || echo "us-east-1")
+
+# Stack name includes config.id so multiple deployments on the same AWS account don't collide
+STACK_NAME="CognitoS3BaseStack-${CONFIG_ID}"
 
 echo "  Stack:  $STACK_NAME"
 echo "  Region: $AWS_REGION"
@@ -90,7 +93,6 @@ echo "  Public Bucket:   $PUBLIC_BUCKET"
 echo "  Private Bucket:  $PRIVATE_BUCKET"
 echo "  ────────────────────────────────────────────────────"
 echo ""
-echo "  Next: deploy an add-on"
-echo "    cd apps/mileage-tracker/backend && ./scripts/deploy.sh"
-echo "    cd apps/music-player/backend   && ./scripts/deploy.sh"
+echo "  Next: deploy an add-on, e.g.:"
+echo "    BASE_OUTPUTS_PATH=\$(pwd)/base_outputs.json <addon>/scripts/deploy.sh"
 echo ""
