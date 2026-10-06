@@ -6,11 +6,17 @@ A forkable AWS CDK base stack providing Cognito auth + S3 storage.
 Deploy it once, then deploy standalone add-on apps that consume its outputs.
 
 ## Repo family
-| Repo | Status | Description |
-|------|--------|-------------|
-| `cognito-s3-stack-893` | ✅ Deployed + public | Forkable base: Cognito + S3 + IAM |
-| `mileage-expense-tracker-893` | ✅ Complete + public | Mileage + expense tracker with OCR |
-| `music-player-893` | ❌ Not created yet | S3 music streaming app |
+| Repo | Description |
+|------|-------------|
+| `cognito-s3-stack-893` | This repo: Cognito + S3 + IAM |
+| `dropbox-893` | Private files + public albums |
+| `calendar-893` | Calendar CRUD |
+| `pdf-search-893` | OCR PDF search |
+| `video-convert-893` | DVD ingest + ffmpeg convert |
+| `web-app-893` | Generic Amplify frontend |
+| `dliv-web` | Live dliv.com frontend |
+| `music-player-893` | iOS music player |
+| `mileage-expense-tracker-893` | Mileage + expenses |
 
 ## Architecture decisions
 - Add-on repos are **standalone** — not nested inside this repo
@@ -42,9 +48,8 @@ Deploy it once, then deploy standalone add-on apps that consume its outputs.
 - forktest2 stacks destroyed after test, retained resources cleaned up manually
 
 ## Next session — start here
-1. Read this file
-2. Read `/Users/ltm893/Dev/projects/mileage-expense-tracker-893/CONTEXT.md`
-3. Start `music-player-893` standalone repo
+1. Read README.md (repo family and deploy)
+2. This stack is the auth/storage base. Add-ons and frontends are separate repos.
 
 ## Useful commands
 

@@ -4,11 +4,19 @@ A forkable AWS CDK base stack providing Cognito auth + S3 storage. Deploy it onc
 
 ## Repo family
 
-| Repo | Status | Description |
-|------|--------|-------------|
-| `cognito-s3-stack-893` | ✅ This repo | Forkable base: Cognito + S3 + IAM |
-| `mileage-expense-tracker-893` | ✅ Complete | Mileage + expense tracker with OCR receipt scanning |
-| `music-player-893` | 🔜 Coming soon | S3 music streaming app |
+| Repo | Kind | Description |
+|------|------|-------------|
+| `cognito-s3-stack-893` | Base | This repo: Cognito + S3 + IAM |
+| `dropbox-893` | CDK add-on | Private files + public slideshow albums |
+| `calendar-893` | CDK add-on | Calendar CRUD |
+| `pdf-search-893` | CDK add-on | OCR PDF search (Ancestry) |
+| `video-convert-893` | CDK add-on | DVD ingest + ffmpeg convert |
+| `web-app-893` | Amplify frontend | Generic static website |
+| `dliv-web` | Amplify frontend | Live dliv.com fork of `web-app-893` |
+| `music-player-893` | iOS | Music player against the Dropbox API |
+| `mileage-expense-tracker-893` | iOS + CDK | Mileage + expenses with receipt OCR |
+
+Amplify hosts websites only. Backends are CDK stacks with `deploy.sh`. No Amplify SDK.
 
 ## What this deploys
 
@@ -30,13 +38,13 @@ All resource names are prefixed with your `id` — deploy multiple instances on 
 1. Fork + deploy cognito-s3-stack-893
         ↓ writes base_outputs.json
 
-2. Fork + deploy an add-on (e.g. mileage-expense-tracker-893)
-        ↓ reads base_outputs.json via BASE_OUTPUTS_PATH
-        ↓ deploys its own stack on top
-        ↓ writes its own outputs (e.g. met_outputs.json)
+2. Deploy add-ons (dropbox-893, calendar-893, pdf-search-893, …)
+        ↓ each reads base_outputs.json via BASE_OUTPUTS_PATH (optional)
+        ↓ each writes its own outputs JSON
 
-3. Build the iOS app
-        ↓ reads outputs JSON for config (zero hardcoded values)
+3. Point a website or iOS app at those outputs
+        web-app-893 / dliv-web → Amplify env vars
+        music-player / MilesExpenses → dliv_outputs.json / met_outputs.json
 ```
 
 ## Prerequisites
