@@ -4,19 +4,35 @@ A forkable AWS CDK base stack providing Cognito auth + S3 storage. Deploy it onc
 
 ## Repo family
 
-| Repo | Kind | Description |
-|------|------|-------------|
-| `cognito-s3-stack-893` | Base | This repo: Cognito + S3 + IAM |
-| `dropbox-893` | CDK add-on | Private files + public slideshow albums |
-| `calendar-893` | CDK add-on | Calendar CRUD |
-| `pdf-search-893` | CDK add-on | OCR PDF search (Ancestry) |
-| `video-convert-893` | CDK add-on | DVD ingest + ffmpeg convert |
-| `web-app-893` | Amplify frontend | Generic static website |
-| `dliv-web` | Amplify frontend | Live dliv.com fork of `web-app-893` |
-| `music-player-893` | iOS | Music player against the Dropbox API |
-| `mileage-expense-tracker-893` | iOS + CDK | Mileage + expenses with receipt OCR |
+This is the map for the `apps-893` folder. Each directory is its own git repo. The repos share an AWS account through config files and outputs JSON.
 
-Amplify hosts websites only. Backends are CDK stacks with `deploy.sh`. No Amplify SDK.
+### Roles
+
+| Repo | Kind | Role |
+|------|------|------|
+| `cognito-s3-stack-893` | Base | Cognito and S3. Deploy this first. |
+| `dropbox-893` | CDK add-on | Private files and public slideshow albums |
+| `calendar-893` | CDK add-on | Calendar API |
+| `pdf-search-893` | CDK add-on | Ancestry OCR search |
+| `video-convert-893` | CDK add-on | DVD ingest, clip, and combine. MP4s go in the Dropbox private bucket |
+| `mileage-expense-tracker-893` | iOS + CDK | Mileage and expenses. Can share this user pool |
+| `web-app-893` | Amplify frontend | Generic website template |
+| `dliv-web` | Amplify frontend | Live fork of `web-app-893`. `dev` is https://dev.dliv.com and `main` is https://dliv.com |
+| `music-player-893` | iOS | Plays files from the Dropbox API |
+
+### Handoff
+
+Each backend `deploy.sh` writes an outputs JSON with the pool id, client id, and API URL. Websites and iOS apps are pointed at those values.
+
+`web-app-893` and `dliv-web` turn Amplify branch environment variables into `frontend/dliv_outputs.json` when that branch builds. `music-player-893` reads a local `dliv_outputs.json`. Mileage reads `met_outputs.json`.
+
+### Branches
+
+Each repo has its own `dev` and `main`. On `dliv-web`, Amplify serves `dev` at https://dev.dliv.com and `main` at https://dliv.com. Which API a page calls is the environment variable on that Amplify branch. A merge inside `dropbox-893` or `pdf-search-893` leaves the site and those variables as they are.
+
+### Deploy
+
+Amplify hosts `web-app-893` and `dliv-web` only. Backends deploy with `deploy.sh`. The sites use raw Cognito SRP.
 
 ## What this deploys
 
@@ -38,7 +54,7 @@ All resource names are prefixed with your `id` — deploy multiple instances on 
 1. Fork + deploy cognito-s3-stack-893
         ↓ writes base_outputs.json
 
-2. Deploy add-ons (dropbox-893, calendar-893, pdf-search-893, …)
+2. Deploy add-ons (dropbox-893, calendar-893, pdf-search-893, video-convert-893, …)
         ↓ each reads base_outputs.json via BASE_OUTPUTS_PATH (optional)
         ↓ each writes its own outputs JSON
 

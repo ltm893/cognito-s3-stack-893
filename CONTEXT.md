@@ -6,17 +6,7 @@ A forkable AWS CDK base stack providing Cognito auth + S3 storage.
 Deploy it once, then deploy standalone add-on apps that consume its outputs.
 
 ## Repo family
-| Repo | Description |
-|------|-------------|
-| `cognito-s3-stack-893` | This repo: Cognito + S3 + IAM |
-| `dropbox-893` | Private files + public albums |
-| `calendar-893` | Calendar CRUD |
-| `pdf-search-893` | OCR PDF search |
-| `video-convert-893` | DVD ingest + ffmpeg convert |
-| `web-app-893` | Generic Amplify frontend |
-| `dliv-web` | Live dliv.com frontend |
-| `music-player-893` | iOS music player |
-| `mileage-expense-tracker-893` | Mileage + expenses |
+The map lives in [README.md](README.md#repo-family).
 
 ## Architecture decisions
 - Add-on repos are **standalone** — not nested inside this repo
