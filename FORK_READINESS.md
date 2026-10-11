@@ -2,7 +2,7 @@
 
 Checked 2026-10-10. `web-app-893` and `dliv-web` on `dev` match `origin/dev`. The generic frontend is in `web-app-893`. `dliv-web` only adds the sale page on top of that.
 
-A second domain is not ready to fork yet. The deploy shape is. Each backend takes an `id`, writes an outputs file, and the website reads Amplify env vars. What is not ready is the branding, two docs that contradict the build, and the calendar table name.
+A second domain is not ready to fork yet. The deploy shape is. Each backend takes an `id`, writes an outputs file, and the website reads Amplify env vars. The fork docs now match the build. The fork docs, calendar example, and website client id now match the build. Still open: commit the visible-name change with the template before the trial.
 
 ## Already in place
 
@@ -29,28 +29,17 @@ A second domain is not ready to fork yet. The deploy shape is. Each backend take
 
 A fork that only sets Amplify env vars will still present itself as DLIV. Drive the tab title and the shared-tab label from `site` the same way the sidebar already works. Until that lands, the trial is a DLIV-branded site on another hostname.
 
-### 2. Make the fork docs match the build
+### 2. Make the fork docs match the build — done
 
-A forker who follows `CONTEXT.md` will deploy a site that cannot sign in.
+`web-app-893` and `dliv-web` `CONTEXT.md` and `README.md` now match the build: `APP_REGION`, tokens in `localStorage`, PDF search and video convert optional, and `video-convert-893` in the family table. A new domain forks `web-app-893`.
 
-- `amplify.yml` reads `APP_REGION` and writes it to `aws_region`. `auth.js` calls `https://cognito-idp.${aws_region}.amazonaws.com/`. `CONTEXT.md` tells forkers to set `AWS_REGION`. That leaves `aws_region` empty and sign-in fails.
-- `README.md` still says tokens live in `sessionStorage` and clear when the tab closes. The code uses `localStorage`.
-- `CONTEXT.md` “Next steps” still lists work that is done, including “do this next” on `amplify.yml`, and it tells forkers to deploy `pdf-search-893` before the site. PDF search is optional.
-- The family table in `README.md` omits `video-convert-893`. The env var table includes it.
+### 3. Stop the calendar example from reusing DLIV’s table — done
 
-Update those three places so the trial uses `APP_REGION`, treats PDF search and video convert as optional, and describes the token storage the code actually uses.
+`config.example.ts` uses `your-id-here-calendar`. `createTable` is `true` only for the first deploy of that new name, then `false`. The live dliv config still uses `CalendarEvents`. A trial config must not.
 
-### 3. Stop the calendar example from reusing DLIV’s table
+### 4. Write down which client id the website uses — done
 
-`calendar-893/backend/bin/config.example.ts` sets `calendarTable` to `CalendarEvents`. That is the live DLIV table. A second stack in this account with that name reads and writes DLIV events.
-
-Before the trial, change the example to a name that includes `id`, such as `your-id-here-calendar`, and say to set `createTable: true` on the first deploy of a new name, then `false` after. The trial config must not use `CalendarEvents`.
-
-### 4. Write down which client id the website uses
-
-`cognito-s3-stack-893` creates a client for mobile apps. It does not enable `USER_PASSWORD_AUTH`. `dropbox-893/backend/scripts/deploy.sh` creates the client the website needs and writes `user_pool_client_id` into `dropbox_outputs.json`.
-
-The fork notes should say: `USER_POOL_ID` comes from the base outputs, `USER_POOL_CLIENT_ID` comes from `dropbox_outputs.json`, and `DROPBOX_API_URL` comes from that same file. Using the base-stack client makes sign-in fail.
+The website copies `APP_REGION`, `USER_POOL_ID`, `USER_POOL_CLIENT_ID`, and `DROPBOX_API_URL` from `dropbox_outputs.json` (`aws_region`, `auth.user_pool_id`, `auth.user_pool_client_id`, `api.base_url`). `base_outputs.json` has a different client id, `{id}-app-client`. The website uses `{id}-dropbox-client`. Live ids stay in the gitignored outputs file.
 
 ## After that, the trial itself
 

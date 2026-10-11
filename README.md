@@ -109,6 +109,8 @@ export const config = {
 
 Written to the repo root by `deploy.sh`. Gitignored — never committed. Add-ons read this file via `BASE_OUTPUTS_PATH` env var.
 
+`auth.user_pool_client_id` here is `{id}-app-client`. The website does not use it. After `dropbox-893` deploys, the website takes `USER_POOL_CLIENT_ID` from `auth.user_pool_client_id` in `dropbox_outputs.json` (`{id}-dropbox-client`). The pool id in both files is the same pool.
+
 ```json
 {
   "version": "1",
