@@ -10,7 +10,7 @@ The map lives in [README.md](README.md#repo-family).
 
 ## Architecture decisions
 - Add-on repos are **standalone** — not nested inside this repo
-- Add-ons read `base_outputs.json` via `BASE_OUTPUTS_PATH` env var
+- Dropbox, calendar, PDF search, and video convert take `id` from `base/bin/config.ts` when they omit it. `scripts/new-site.sh` copies the pool id and bucket names from `base_outputs.json` into the add-on `config.ts` and asks before each deploy. The mileage tracker reads `base_outputs.json` through `BASE_OUTPUTS_PATH`.
 - No shared npm packages — `base-outputs.ts` type is copied into each add-on
 - No Amplify SDK — iOS apps use raw URLSession + Cognito SRP
 - Stack name = `CognitoS3BaseStack-{id}` — prevents same-account collisions
@@ -19,6 +19,7 @@ The map lives in [README.md](README.md#repo-family).
 - `base/bin/app.ts` — stack name derived from `config.id`
 - `base/bin/config.example.ts` — template for forkers (config.ts is gitignored)
 - `base/scripts/deploy.sh` — reads config via grep, shows resource summary before confirm
+- `scripts/new-site.sh` — prompts for an id, clones that base repo, asks before the base deploy, then one add-on at a time
 - `shared/types/base-outputs.ts` — TypeScript type for base_outputs.json
 - `base_outputs.json` — gitignored, written by deploy.sh
 - `apps/` — deleted (add-ons migrated to standalone repos)

@@ -14,7 +14,7 @@ This is the map for the `apps-893` folder. Each directory is its own git repo. T
 | `dropbox-893` | CDK add-on | Private files and public slideshow albums |
 | `calendar-893` | CDK add-on | Calendar API |
 | `pdf-search-893` | CDK add-on | Ancestry OCR search |
-| `video-convert-893` | CDK add-on | DVD ingest, clip, and combine. MP4s go in the Dropbox private bucket |
+| `video-convert-893` | CDK add-on | DVD ingest, clip, and combine. Needs `dropbox-893`. Users open the MP4 from the Dropbox file list |
 | `mileage-expense-tracker-893` | iOS + CDK | Mileage and expenses. Can share this user pool |
 | `web-app-893` | Amplify frontend | Generic website template |
 | `dliv-web` | Amplify frontend | Live fork of `web-app-893`. `dev` is https://dev.dliv.com and `main` is https://dliv.com |
@@ -54,8 +54,10 @@ All resource names are prefixed with your `id` — deploy multiple instances on 
 1. Fork + deploy cognito-s3-stack-893
         ↓ writes base_outputs.json
 
-2. Deploy add-ons (dropbox-893, calendar-893, pdf-search-893, video-convert-893, …)
-        ↓ each reads base_outputs.json via BASE_OUTPUTS_PATH (optional)
+2. Deploy add-ons (dropbox-893, calendar-893, and optionally pdf-search-893). video-convert-893 needs dropbox-893 first
+        ↓ id comes from base/bin/config.ts when the add-on config omits it
+        ↓ copy the user pool id and bucket names from base_outputs.json into that add-on's config.ts
+        ↓ calendar table defaults to {id}-calendar and createTable defaults to true
         ↓ each writes its own outputs JSON
 
 3. Point a website or iOS app at those outputs
@@ -65,9 +67,28 @@ All resource names are prefixed with your `id` — deploy multiple instances on 
 
 ## Prerequisites
 
-- AWS CLI configured (`aws configure`)
-- AWS CDK bootstrapped (`npx cdk bootstrap`)
+- An AWS administrator account, with access keys installed (`aws configure`)
+- CDK bootstrapped once in that account and region (below)
 - Node.js 20+
+
+## Bootstrap CDK
+
+Do this once for the AWS account and region before the first `deploy.sh` or `./scripts/new-site.sh` deploy. The region is `awsRegion` in `base/bin/config.ts`. Later add-ons in that same account and region reuse this bootstrap.
+
+```bash
+aws sts get-caller-identity
+cd base
+npm install
+npx cdk bootstrap aws://ACCOUNT/REGION
+```
+
+`ACCOUNT` is the account number from `aws sts get-caller-identity`. For account `123456789012` in `us-east-1`:
+
+```bash
+npx cdk bootstrap aws://123456789012/us-east-1
+```
+
+CDK creates a stack named `CDKToolkit` in that region. That stack holds the bucket and roles used by later deploys. AWS guide: [Bootstrapping](https://docs.aws.amazon.com/cdk/v2/guide/bootstrapping.html).
 
 ## Quick start
 
@@ -94,6 +115,33 @@ chmod +x scripts/deploy.sh
 
 The deploy script shows a summary of exactly what will be created before asking for confirmation.
 
+## Start another site
+
+```bash
+./scripts/new-site.sh
+```
+
+The id you type is the folder `~/Dev/projects/<id>/` and the `id` in `base/bin/config.ts`. The user pool is `<id>-app-users`. The buckets are `<id>-public` and `<id>-private`. The script clones this repo’s `dev` branch into that folder. The git directory stays `cognito-s3-stack-893`. A deploy needs an AWS administrator account with keys installed (`aws configure`). The script stops that deploy when the keys are missing. Bootstrap that account and region once first. See [Bootstrap CDK](#bootstrap-cdk).
+
+It asks whether to deploy the base stack. `base/scripts/deploy.sh` asks again and lists the resources before it creates them.
+
+The menu then clones one add-on at a time: Dropbox, calendar, PDF search, or video convert. After that `config.ts` is written, it asks whether to deploy that stack. The pool id and bucket names are copied from `base_outputs.json`. Until that file exists, the add-on deploy is skipped. Video convert is refused until `dropbox-893` is in that folder. Finished MP4s open from the Dropbox file list. Its deploy also stops unless local Docker is running, because the Fargate image is built on this machine. PDF search does not need Dropbox. Choose **5** when you are done. Run the script again with the same id to add another add-on. `dliv-web` is not cloned.
+
+`scripts/new-site.test.sh` answers those prompts against a temporary folder. It does not call AWS.
+
+## Check or remove a site
+
+```bash
+./scripts/validate-site.sh
+./scripts/destroy-site.sh
+```
+
+Both read `id` and `awsRegion` from `base/bin/config.ts`. Validate prints the stacks, buckets, tables, user pool, APIs, and the video-convert cluster for that id. It exits 1 when a stack is failed or rolling back.
+
+Destroy deletes the add-on stacks first and the base stack last, then the retained buckets, tables, user pool, and leftover API, cluster, and log group. CloudFormation keeps those buckets, tables, and the user pool after the stack is gone, so the script removes them itself. Type the site id to confirm. `CDKToolkit` and any Amplify app stay. The live ids `dliv`, `apps-893`, `met893`, `dropbox893`, and `calendar893` are refused.
+
+`scripts/site-aws.test.sh` runs both scripts against a fake AWS CLI.
+
 ## Config reference
 
 ```ts
@@ -107,7 +155,7 @@ export const config = {
 
 ## base_outputs.json
 
-Written to the repo root by `deploy.sh`. Gitignored — never committed. Add-ons read this file via `BASE_OUTPUTS_PATH` env var.
+Written to the repo root by `deploy.sh`. Gitignored — never committed. Dropbox, calendar, PDF search, and video convert copy the pool id and bucket names from this file into their own `config.ts`. Their `id` comes from `base/bin/config.ts` when they omit it. The mileage tracker reads this file through `BASE_OUTPUTS_PATH`.
 
 `auth.user_pool_client_id` here is `{id}-app-client`. The website does not use it. After `dropbox-893` deploys, the website takes `USER_POOL_CLIENT_ID` from `auth.user_pool_client_id` in `dropbox_outputs.json` (`{id}-dropbox-client`). The pool id in both files is the same pool.
 
@@ -163,7 +211,13 @@ cognito-s3-stack-893/
 │   ├── lib/base-stack.ts       ← CDK stack definition
 │   └── scripts/
 │       ├── deploy.sh           ← deploy + write base_outputs.json
-│       └── check-stack.sh      ← verify deployed stack outputs
+│       └── check-stack.sh      ← older base-stack check; use validate-site.sh
+├── scripts/
+│   ├── new-site.sh             ← clone a new id, then ask before each deploy
+│   ├── new-site.test.sh        ← prompt checks, no AWS
+│   ├── validate-site.sh        ← report stacks and resources for this id
+│   ├── destroy-site.sh         ← delete those stacks and retained resources
+│   └── site-aws.test.sh        ← fake-AWS checks for validate and destroy
 └── shared/
     └── types/base-outputs.ts   ← TypeScript type for base_outputs.json
 ```

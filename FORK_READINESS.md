@@ -35,7 +35,7 @@ A fork that only sets Amplify env vars will still present itself as DLIV. Drive 
 
 ### 3. Stop the calendar example from reusing DLIV’s table — done
 
-`config.example.ts` uses `your-id-here-calendar`. `createTable` is `true` only for the first deploy of that new name, then `false`. The live dliv config still uses `CalendarEvents`. A trial config must not.
+The calendar example omits `calendarTable` and `createTable`. The table defaults to `{id}-calendar` and `createTable` defaults to `true`. Set `createTable` to `false` after that first deploy. `id` comes from `base/bin/config.ts`. The live dliv config still uses `CalendarEvents` and `createTable: false`. A trial config must not use `CalendarEvents`.
 
 ### 4. Write down which client id the website uses — done
 
@@ -43,11 +43,11 @@ The website copies `APP_REGION`, `USER_POOL_ID`, `USER_POOL_CLIENT_ID`, and `DRO
 
 ## After that, the trial itself
 
-Use a new `id` that is not `dliv`, `apps-893`, or `met893`. One AWS account is fine if every name is prefixed with that id.
+Use a new `id` that is not `dliv`, `apps-893`, or `met893`. One AWS account is fine if every name is prefixed with that id. The account must be an administrator, with keys installed (`aws configure`), before `./scripts/new-site.sh` can deploy. Bootstrap that account and region once first (`npx cdk bootstrap aws://ACCOUNT/REGION`). Steps are in the [Bootstrap CDK](README.md#bootstrap-cdk) section.
 
-1. Fork and deploy `cognito-s3-stack-893` with that `id` and a `fromEmail` you can verify in SES. Invite email will not send until SES accepts that address.
-2. Fork and deploy `dropbox-893` against that pool and the new `{id}-public` and `{id}-private` buckets.
-3. Fork and deploy `calendar-893` with a new table name and `createTable: true`.
+1. From this repo run `./scripts/new-site.sh`. The id is the folder `~/Dev/projects/<id>/` and the base `config.ts` id. Answer yes to deploy the base stack. Invite email will not send until SES accepts the from-email.
+2. Choose Dropbox, then yes to deploy it. The script copies the pool id and bucket names from `base_outputs.json`.
+3. Choose calendar, then yes to deploy it. The table defaults to `{id}-calendar` and `createTable` defaults to `true`. After that deploy succeeds, set `createTable: false`. PDF search is optional. Video convert needs Dropbox already in the site folder. The script refuses it until then, because the finished MP4 opens from the Dropbox file list.
 4. Fork `web-app-893`. Create a new Amplify app on that fork. Set `APP_REGION`, `USER_POOL_ID`, `USER_POOL_CLIENT_ID` (the Dropbox client), `DROPBOX_API_URL`, `CALENDAR_API_URL`, and the `SITE_*` values for the new name.
 5. Leave `PDF_SEARCH_API_URL` and `VIDEO_CONVERT_API_URL` empty for the first build.
 6. Open the Amplify URL. Sign in, open a slideshow, open Dropbox, open Calendar.
