@@ -1,0 +1,14 @@
+name: test
+
+on:
+  pull_request:
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - run: bash scripts/new-site.test.sh
+      - run: bash scripts/site-aws.test.sh
+      - run: bash scripts/setup-amplify.test.sh
+      - run: bash scripts/create-user.test.sh

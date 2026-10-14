@@ -162,6 +162,14 @@ The pool does not allow self sign-up. Create the one sign-in user with:
 
 It reads the pool id from `dropbox_outputs.json`. The password needs 8 or more characters, with upper, lower, a number, and a symbol. If that email already exists, the script sets the permanent password on it.
 
+## Pull request tests
+
+```bash
+./scripts/setup-workflows.sh
+```
+
+Writes `.github/workflows/test.yml` for the family repos that do not have one: this repo, Dropbox, calendar, mileage, and the music player. `web-app-893`, `pdf-search-893`, `dliv-web`, and `video-convert-893` already have a workflow, and the script leaves those files in place. It does not commit or push. Commit and push `dev` in each repo that received a file. The check appears on the next pull request.
+
 ## Config reference
 
 ```ts
@@ -241,7 +249,9 @@ cognito-s3-stack-893/
 │   ├── setup-amplify.sh        ← create the Amplify app and set branch variables
 │   ├── setup-amplify.test.sh   ← prompt checks, no AWS
 │   ├── create-user.sh          ← create one Cognito sign-in user
-│   └── create-user.test.sh     ← prompt checks, no AWS
+│   ├── create-user.test.sh     ← prompt checks, no AWS
+│   ├── setup-workflows.sh      ← write missing pull-request test workflows
+│   └── setup-workflows.test.sh ← writes those files in a temporary folder
 └── shared/
     └── types/base-outputs.ts   ← TypeScript type for base_outputs.json
 ```
