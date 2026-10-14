@@ -21,4 +21,7 @@ export const config = {
   // Email address Cognito sends invite emails from.
   // Must be verified in AWS SES for production use.
   fromEmail: "noreply@yourdomain.com",
+
+  // Sign-in page included in the invite email. Leave the placeholder to omit the link.
+  inviteUrl: "https://yourdomain.com",
 };

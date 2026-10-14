@@ -15,6 +15,7 @@ new BaseStack(app, stackName, {
   awsRegion:    config.awsRegion,
   userPoolName: config.userPoolName,
   fromEmail:    config.fromEmail,
+  inviteUrl:    config.inviteUrl,
   env: {
     account: process.env.CDK_DEFAULT_ACCOUNT,
     region:  config.awsRegion,

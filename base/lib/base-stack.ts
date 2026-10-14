@@ -20,6 +20,17 @@ export interface BaseStackProps extends cdk.StackProps {
   awsRegion:    string;
   userPoolName: string;
   fromEmail:    string;
+  inviteUrl?:   string;
+}
+
+export function invitationEmailBody(inviteUrl?: string): string {
+  const body =
+    "Hi {username},<br/><br/>" +
+    "Your temporary password is: <strong>{####}</strong><br/>" +
+    "You will be prompted to set a new password on first sign in.";
+  const url = String(inviteUrl || "").trim();
+  if (!/^https:\/\/\S+$/i.test(url) || url.includes("yourdomain.com")) return body;
+  return `${body}<br/><br/>Sign in at <a href="${url}">${url}</a>`;
 }
 
 export class BaseStack extends cdk.Stack {
@@ -75,10 +86,7 @@ export class BaseStack extends cdk.Stack {
       autoVerify:        { email: true },
       userInvitation: {
         emailSubject: "You've been invited",
-        emailBody:
-          "Hi {username},<br/><br/>" +
-          "Your temporary password is: <strong>{####}</strong><br/>" +
-          "You will be prompted to set a new password on first sign in.",
+        emailBody: invitationEmailBody(props.inviteUrl),
       },
       passwordPolicy: {
         minLength:        8,
