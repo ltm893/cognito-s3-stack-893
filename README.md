@@ -125,7 +125,7 @@ The id you type is the folder `~/Dev/projects/<id>/` and the `id` in `base/bin/c
 
 It asks whether to deploy the base stack. `base/scripts/deploy.sh` asks again and lists the resources before it creates them.
 
-The menu then clones one add-on at a time: Dropbox, calendar, PDF search, or video convert. After that `config.ts` is written, it asks whether to deploy that stack. The pool id and bucket names are copied from `base_outputs.json`. Until that file exists, the add-on deploy is skipped. Video convert is refused until `dropbox-893` is in that folder. Finished MP4s open from the Dropbox file list. Its deploy also stops unless local Docker is running, because the Fargate image is built on this machine. PDF search does not need Dropbox. Choose **5** when you are done. Run the script again with the same id to add another add-on. `dliv-web` is not cloned.
+The menu then clones one add-on at a time: Dropbox, calendar, PDF search, or video convert. After that `config.ts` is written, it asks whether to deploy that stack. The pool id and bucket names are copied from `base_outputs.json`. Until that file exists, the add-on deploy is skipped. Video convert is refused until `dropbox-893` is in that folder. Finished MP4s open from the Dropbox file list. Its deploy also stops unless local Docker is running, because the Fargate image is built on this machine. PDF search does not need Dropbox. Choosing it sets `docsBucket` to `{id}-pdf-docs` and creates that bucket when it is missing. Archive boxes load there. Dropbox lists `{id}-private`. Choose **5** when you are done. Run the script again with the same id to add another add-on. `dliv-web` is not cloned.
 
 `scripts/new-site.test.sh` answers those prompts against a temporary folder. It does not call AWS.
 
@@ -141,6 +141,26 @@ Both read `id` and `awsRegion` from `base/bin/config.ts`. Validate prints the st
 Destroy deletes the add-on stacks first and the base stack last, then the retained buckets, tables, user pool, and leftover API, cluster, and log group. CloudFormation keeps those buckets, tables, and the user pool after the stack is gone, so the script removes them itself. Type the site id to confirm. `CDKToolkit` and any Amplify app stay. The live ids `dliv`, `apps-893`, `met893`, `dropbox893`, and `calendar893` are refused.
 
 `scripts/site-aws.test.sh` runs both scripts against a fake AWS CLI.
+
+## Host the site on Amplify
+
+```bash
+./scripts/setup-amplify.sh
+```
+
+Run this from the site's `cognito-s3-stack-893` after Dropbox has written `dropbox_outputs.json`. The script creates an Amplify Hosting app named after the site id and sets the branch environment variables from the outputs files. `USER_POOL_CLIENT_ID` is the Dropbox client. Calendar, PDF search, and video convert URLs are added when those outputs files exist.
+
+A GitHub personal access token with `repo` scope connects `https://github.com/ltm893/web-app-893` and starts the `dev` build. Press enter at the token prompt to skip that, and the script prints the Amplify console steps to connect the repository. The build spec stays `amplify.yml`. Do not point the app at `dliv-web`. Add a custom domain in the console only after the Amplify URL loads.
+
+`scripts/setup-amplify.test.sh` answers those prompts against a fake AWS CLI.
+
+The pool does not allow self sign-up. Create the one sign-in user with:
+
+```bash
+./scripts/create-user.sh
+```
+
+It reads the pool id from `dropbox_outputs.json`. The password needs 8 or more characters, with upper, lower, a number, and a symbol. If that email already exists, the script sets the permanent password on it.
 
 ## Config reference
 
@@ -217,7 +237,11 @@ cognito-s3-stack-893/
 │   ├── new-site.test.sh        ← prompt checks, no AWS
 │   ├── validate-site.sh        ← report stacks and resources for this id
 │   ├── destroy-site.sh         ← delete those stacks and retained resources
-│   └── site-aws.test.sh        ← fake-AWS checks for validate and destroy
+│   ├── site-aws.test.sh        ← fake-AWS checks for validate and destroy
+│   ├── setup-amplify.sh        ← create the Amplify app and set branch variables
+│   ├── setup-amplify.test.sh   ← prompt checks, no AWS
+│   ├── create-user.sh          ← create one Cognito sign-in user
+│   └── create-user.test.sh     ← prompt checks, no AWS
 └── shared/
     └── types/base-outputs.ts   ← TypeScript type for base_outputs.json
 ```

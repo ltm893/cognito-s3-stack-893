@@ -47,10 +47,8 @@ Use a new `id` that is not `dliv`, `apps-893`, or `met893`. One AWS account is f
 
 1. From this repo run `./scripts/new-site.sh`. The id is the folder `~/Dev/projects/<id>/` and the base `config.ts` id. Answer yes to deploy the base stack. Invite email will not send until SES accepts the from-email.
 2. Choose Dropbox, then yes to deploy it. The script copies the pool id and bucket names from `base_outputs.json`.
-3. Choose calendar, then yes to deploy it. The table defaults to `{id}-calendar` and `createTable` defaults to `true`. After that deploy succeeds, set `createTable: false`. PDF search is optional. Video convert needs Dropbox already in the site folder. The script refuses it until then, because the finished MP4 opens from the Dropbox file list.
-4. Fork `web-app-893`. Create a new Amplify app on that fork. Set `APP_REGION`, `USER_POOL_ID`, `USER_POOL_CLIENT_ID` (the Dropbox client), `DROPBOX_API_URL`, `CALENDAR_API_URL`, and the `SITE_*` values for the new name.
-5. Leave `PDF_SEARCH_API_URL` and `VIDEO_CONVERT_API_URL` empty for the first build.
-6. Open the Amplify URL. Sign in, open a slideshow, open Dropbox, open Calendar.
-7. Add the custom domain in Amplify only after that URL works.
+3. Choose calendar, then yes to deploy it. The table defaults to `{id}-calendar` and `createTable` defaults to `true`. After that deploy succeeds, set `createTable: false`. PDF search is optional. Choosing it sets `docsBucket` to `{id}-pdf-docs` and creates that bucket when it is missing. Archive boxes load there. Dropbox lists `{id}-private`. Video convert needs Dropbox already in the site folder. The script refuses it until then, because the finished MP4 opens from the Dropbox file list.
+4. From that site's `cognito-s3-stack-893` run `./scripts/setup-amplify.sh`. It creates the Amplify app with the AWS CLI and sets the branch variables from the outputs files. The client id is the Dropbox client. A GitHub token connects `web-app-893` and starts the build. Without a token, the script prints the console steps. Do not connect `dliv-web`.
+5. Open the Amplify URL. Sign in, open a slideshow, open Dropbox, and open Calendar. Add the custom domain in the Amplify console only after that URL works.
 
 Skip `dliv-web`, `music-player-893`, and `mileage-expense-tracker-893` for this trial.

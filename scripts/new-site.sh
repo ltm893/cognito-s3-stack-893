@@ -114,7 +114,16 @@ if repo == "dropbox-893":
     text = text.replace(f'privateBucket: "{site_id}-private"', f'privateBucket: "{private_bucket}"', 1)
     text = text.replace(f'publicBucket: "{site_id}-public"', f'publicBucket: "{public_bucket}"', 1)
 elif repo == "pdf-search-893":
-    text = text.replace(f'docsBucket: "{site_id}-private"', f'docsBucket: "{private_bucket}"', 1)
+    import re
+    docs_bucket = f"{site_id}-pdf-docs"
+    text, count = re.subn(
+        r'(docsBucket:\s*")[^"]*(")',
+        rf"\1{docs_bucket}\2",
+        text,
+        count=1,
+    )
+    if count != 1:
+        raise SystemExit("pdf-search config is missing docsBucket")
 elif repo == "video-convert-893":
     text = text.replace(f'privateBucket: "{site_id}-private"', f'privateBucket: "{private_bucket}"', 1)
 
@@ -130,6 +139,38 @@ aws_keys_ready() {
     return 1
   fi
   return 0
+}
+
+ensure_pdf_docs_bucket() {
+  local dir="$1"
+  local config="${dir}/bin/config.ts"
+  local bucket region
+  bucket="$(grep -E '^[[:space:]]+docsBucket:' "$config" | head -1 | sed 's/.*"\([^"]*\)".*/\1/')"
+  region="$(grep -E '^[[:space:]]+awsRegion:' "$config" | head -1 | sed 's/.*"\([^"]*\)".*/\1/')"
+  if [ -z "$bucket" ] || [ -z "$region" ]; then
+    echo "  Could not read docsBucket and awsRegion from ${config}"
+    return 1
+  fi
+  if [ "$bucket" = "${ID}-private" ] || [ "$bucket" = "${ID}-public" ]; then
+    echo "  Archive boxes use ${ID}-pdf-docs."
+    echo "  docsBucket is ${bucket}, and Dropbox lists that bucket."
+    return 1
+  fi
+  if aws s3api head-bucket --bucket "$bucket" --region "$region" >/dev/null 2>&1; then
+    echo "  Archive bucket exists: ${bucket}"
+    return 0
+  fi
+  echo "  Creating archive bucket: ${bucket}"
+  if [ "$region" = "us-east-1" ]; then
+    aws s3api create-bucket --bucket "$bucket" --region "$region"
+  else
+    aws s3api create-bucket --bucket "$bucket" --region "$region" \
+      --create-bucket-configuration "LocationConstraint=${region}"
+  fi
+  aws s3api put-public-access-block --bucket "$bucket" --region "$region" \
+    --public-access-block-configuration BlockPublicAcls=true,IgnorePublicAcls=true,BlockPublicPolicy=true,RestrictPublicBuckets=true
+  aws s3api put-bucket-encryption --bucket "$bucket" --region "$region" \
+    --server-side-encryption-configuration '{"Rules":[{"ApplyServerSideEncryptionByDefault":{"SSEAlgorithm":"AES256"},"BucketKeyEnabled":true}]}'
 }
 
 offer_deploy() {
@@ -151,6 +192,9 @@ offer_deploy() {
       echo "  Then choose 4 again."
       return 1
     fi
+  fi
+  if [[ "$dir" == */pdf-search-893/backend ]]; then
+    ensure_pdf_docs_bucket "$dir" || return 1
   fi
   echo "  Running ${dir}/scripts/deploy.sh"
   echo "  That script asks again before it creates AWS resources."
@@ -196,6 +240,10 @@ write_addon() {
   if [ "$repo" = "calendar-893" ]; then
     echo "  The table defaults to ${ID}-calendar and createTable defaults to true."
     echo "  After this deploy succeeds, set createTable to false."
+  fi
+  if [ "$repo" = "pdf-search-893" ]; then
+    echo "  Archive boxes go to ${ID}-pdf-docs."
+    echo "  Dropbox lists ${ID}-private."
   fi
   offer_deploy "${repo}" "${DEST}/${repo}/backend" || true
 }
@@ -266,6 +314,7 @@ while true; do
     5)
       echo ""
       echo "  Site folder: ${DEST}"
+      echo "  After the backends are deployed, run ./scripts/setup-amplify.sh in ${DEST}/cognito-s3-stack-893."
       echo "  Done."
       exit 0
       ;;

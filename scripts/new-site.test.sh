@@ -39,6 +39,7 @@ export const config = {
   userPoolId: "us-east-1_XXXXXXXXX",
   privateBucket: "your-id-here-private",
   publicBucket: "your-id-here-public",
+  docsBucket: "your-id-here-private",
 };
 EXAMPLE
 exit 0
@@ -153,6 +154,29 @@ chmod +x "${FAKE_BIN}/aws"
 printf 'abc-site\n1\nn\ny\n5\n' | run_site >/dev/null
 if [ -e "${TMP}/abc-site/dropbox-893/backend/scripts/deployed-dropbox" ]; then
   fail "deploy ran without AWS keys"
+fi
+
+AWS_LOG="${TMP}/aws.log"
+: > "$AWS_LOG"
+cat > "${FAKE_BIN}/aws" <<EOF
+#!/bin/bash
+echo "\$*" >> "${AWS_LOG}"
+if [ "\$1" = "s3api" ] && [ "\$2" = "head-bucket" ]; then
+  exit 1
+fi
+exit 0
+EOF
+chmod +x "${FAKE_BIN}/aws"
+printf 'abc-site\n3\ny\n5\n' | run_site >/dev/null 2>&1
+PDF_CONFIG="${TMP}/abc-site/pdf-search-893/backend/bin/config.ts"
+grep -q 'docsBucket: "abc-site-pdf-docs"' "$PDF_CONFIG" || fail "pdf config did not use the archive bucket"
+if grep -q 'docsBucket: "abc-site-private"' "$PDF_CONFIG"; then
+  fail "pdf config used the Dropbox private bucket"
+fi
+grep -q 'create-bucket --bucket abc-site-pdf-docs' "$AWS_LOG" || fail "archive bucket was not created"
+grep -q 'put-public-access-block --bucket abc-site-pdf-docs' "$AWS_LOG" || fail "archive bucket was left public"
+if grep -q 'create-bucket --bucket abc-site-private' "$AWS_LOG"; then
+  fail "Dropbox private bucket was created as the archive bucket"
 fi
 
 echo "new-site.sh prompt checks passed"

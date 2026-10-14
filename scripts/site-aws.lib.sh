@@ -127,6 +127,7 @@ log_present() {
 site_buckets() {
   echo "${ID}-public"
   echo "${ID}-private"
+  echo "${ID}-pdf-docs"
   echo "${ID}-ancestry-extracts"
   echo "${ID}-video-ingest"
   echo "${ID}-met-receipts"
