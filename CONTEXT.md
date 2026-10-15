@@ -1,0 +1,82 @@
+# CONTEXT.md — cognito-s3-stack-893
+# Read this first at the start of every session.
+
+## What this repo is
+A forkable AWS CDK base stack providing Cognito auth + S3 storage.
+Deploy it once, then deploy standalone add-on apps that consume its outputs.
+
+## Repo family
+The map lives in [README.md](README.md#repo-family).
+
+## Architecture decisions
+- Add-on repos are **standalone** — not nested inside this repo
+- Dropbox, calendar, PDF search, and video convert take `id` from `base/bin/config.ts` when they omit it. `scripts/new-site.sh` copies the pool id and bucket names from `base_outputs.json` into the add-on `config.ts` and asks before each deploy. The mileage tracker reads `base_outputs.json` through `BASE_OUTPUTS_PATH`.
+- No shared npm packages — `base-outputs.ts` type is copied into each add-on
+- No Amplify SDK — iOS apps use raw URLSession + Cognito SRP
+- Stack name = `CognitoS3BaseStack-{id}` — prevents same-account collisions
+
+## This repo's current state
+- `base/bin/app.ts` — stack name derived from `config.id`
+- `base/bin/config.example.ts` — template for forkers (config.ts is gitignored)
+- `base/scripts/deploy.sh` — reads config via grep, shows resource summary before confirm
+- `scripts/new-site.sh` — prompts for an id, clones that base repo, asks before the base deploy, then one add-on at a time
+- `shared/types/base-outputs.ts` — TypeScript type for base_outputs.json
+- `base_outputs.json` — gitignored, written by deploy.sh
+- `apps/` — deleted (add-ons migrated to standalone repos)
+
+## base_outputs.json (deployed values — test893)
+- Region: us-east-1
+- User Pool: us-east-1_5Ys317ypI
+- Identity Pool: us-east-1:c9516012-77b7-4106-8fe6-d13046546d40
+- Public bucket: test893-public
+- Private bucket: test893-private
+
+## Fork test — COMPLETE ✅
+- Simulated in `~/Dev/projects/fork-test/`
+- `CognitoS3BaseStack-forktest2` deployed with separate User Pool, buckets
+- `MileageExpenseStack-forktest2` deployed with separate tables, API, bucket
+- iOS app built pointing at forktest2 backend — login + expense creation confirmed
+- forktest2 stacks destroyed after test, retained resources cleaned up manually
+
+## Next session — start here
+1. Read README.md (repo family and deploy)
+2. This stack is the auth/storage base. Add-ons and frontends are separate repos.
+
+## Useful commands
+
+### Deploy base stack
+```bash
+cd ~/Dev/projects/cognito-s3-stack-893/base
+./scripts/deploy.sh
+```
+
+### Deploy MET add-on
+```bash
+cd ~/Dev/projects/mileage-expense-tracker-893/backend
+BASE_OUTPUTS_PATH=~/Dev/projects/cognito-s3-stack-893/base_outputs.json \
+  ./scripts/deploy.sh
+```
+
+### Create a Cognito user
+```bash
+aws cognito-idp admin-create-user \
+  --user-pool-id <user_pool_id> \
+  --username user@example.com \
+  --temporary-password 'TempPass1!' \
+  --message-action SUPPRESS \
+  --region us-east-1
+
+aws cognito-idp admin-set-user-password \
+  --user-pool-id <user_pool_id> \
+  --username user@example.com \
+  --password 'PermPass1!' \
+  --permanent \
+  --region us-east-1
+```
+
+### Destroy a stack + retained resources
+```bash
+npx cdk destroy CognitoS3BaseStack-{id}
+aws s3 rb s3://{id}-public --force
+aws s3 rb s3://{id}-private --force
+```

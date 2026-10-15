@@ -1,5 +1,7 @@
 #!/bin/bash
 # base/scripts/check-stack.sh
+# Older check for a stack named CognitoS3BaseStack. Deploy creates
+# CognitoS3BaseStack-{id}. Use ../../scripts/validate-site.sh for this id.
 SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
 cd "${SCRIPT_DIR}/.."
 
