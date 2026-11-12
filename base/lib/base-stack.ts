@@ -90,7 +90,7 @@ export class BaseStack extends cdk.Stack {
       },
       userVerification: {
         emailSubject: "Your DLIV password reset code",
-        emailBody: "Your code is a DLIV password reset code: {####}.",
+        emailBody: "Your code is a DLIV password reset code: {####}",
         emailStyle: cognito.VerificationEmailStyle.CODE,
       },
       passwordPolicy: {
