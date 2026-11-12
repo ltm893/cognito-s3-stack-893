@@ -26,6 +26,8 @@ for repo in cognito-s3-stack-893 dropbox-893 calendar-893 mileage-expense-tracke
 done
 grep -q 'npm test' "${TMP}/dropbox-893/.github/workflows/test.yml" || fail "dropbox workflow does not run npm test"
 grep -q 'scripts/new-site.test.sh' "${TMP}/cognito-s3-stack-893/.github/workflows/test.yml" || fail "cognito workflow does not run its shell tests"
+grep -q 'scripts/reset-email.test.sh' "${TMP}/cognito-s3-stack-893/.github/workflows/test.yml" || fail "cognito workflow does not check the reset email"
+grep -q 'scripts/reset-email.test.sh' "${TMP}/cognito-s3-stack-893/.github/workflows/test.yml" || fail "cognito workflow does not check the reset email"
 grep -q 'run_tests.sh' "${TMP}/music-player-893/.github/workflows/test.yml" || fail "music workflow does not run run_tests.sh"
 grep -q 'MileageTracker893Tests' "${TMP}/mileage-expense-tracker-893/.github/workflows/test.yml" || fail "mileage workflow does not name its unit tests"
 [ -f "${TMP}/mileage-expense-tracker-893/ios/MileageTracker893/MileageTracker893.xcodeproj/xcshareddata/xcschemes/MileageTracker893.xcscheme" ] || fail "mileage scheme was not written"

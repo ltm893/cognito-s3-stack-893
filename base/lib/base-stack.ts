@@ -88,6 +88,11 @@ export class BaseStack extends cdk.Stack {
         emailSubject: "You've been invited",
         emailBody: invitationEmailBody(props.inviteUrl),
       },
+      userVerification: {
+        emailSubject: "Your DLIV password reset code",
+        emailBody: "Your code is a DLIV password reset code: {####}",
+        emailStyle: cognito.VerificationEmailStyle.CODE,
+      },
       passwordPolicy: {
         minLength:        8,
         requireLowercase: true,
