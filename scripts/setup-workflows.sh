@@ -54,6 +54,7 @@ jobs:
       - run: bash scripts/site-aws.test.sh
       - run: bash scripts/setup-amplify.test.sh
       - run: bash scripts/create-user.test.sh
+      - run: bash scripts/reset-email.test.sh
 EOF
 }
 
