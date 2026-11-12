@@ -162,13 +162,21 @@ The pool does not allow self sign-up. Create the one sign-in user with:
 
 It reads the pool id from `dropbox_outputs.json`. The password needs 8 or more characters, with upper, lower, a number, and a symbol. If that email already exists, the script sets the permanent password on it.
 
+## Password reset email
+
+Self sign-up is off, so the pool verification template is the forgot-password code. The subject is `Your DLIV password reset code`. The body is `Your code is a DLIV password reset code: {####}` with no period after the code. `{####}` has to stay in the body. The invite email is separate and still says `Your temporary password is`. `scripts/reset-email.test.sh` checks both sentences.
+
+The live message stays on Cognito's default wording until `base/scripts/deploy.sh` updates the existing pool. An Amplify rebuild does not change this email.
+
 ## Pull request tests
 
 ```bash
 ./scripts/setup-workflows.sh
 ```
 
-Writes `.github/workflows/test.yml` for the family repos that do not have one: this repo, Dropbox, calendar, mileage, and the music player. `web-app-893`, `pdf-search-893`, `dliv-web`, and `video-convert-893` already have a workflow, and the script leaves those files in place. It does not commit or push. Commit and push `dev` in each repo that received a file. The check appears on the next pull request.
+Writes `.github/workflows/test.yml` for the family repos that do not have one: this repo, Dropbox, calendar, mileage, and the music player. `web-app-893`, `pdf-search-893`, `dliv-web`, and `video-convert-893` already have a workflow, and the script leaves those files in place. It does not commit or push. Commit and push `dev` in each repo that received a file. The check appears on the next pull request. GitHub does not require that check before a merge.
+
+These clones also run their test command before `git push`. Install the hook once with `bash scripts/install-git-hooks.sh`. Repos whose tests are `npm test` use Node 20, because Node 25 does not run `node --test` on a directory. `SKIP_TESTS=1 git push` skips the check. `dliv-web` also runs the tests in Cursor before a pull request is opened or merged. The music player and mileage tracker do not have this local hook. Their tests need an iPhone simulator and still run on GitHub.
 
 ## Config reference
 
@@ -250,6 +258,9 @@ cognito-s3-stack-893/
 │   ├── setup-amplify.test.sh   ← prompt checks, no AWS
 │   ├── create-user.sh          ← create one Cognito sign-in user
 │   ├── create-user.test.sh     ← prompt checks, no AWS
+│   ├── reset-email.test.sh     ← reset email keeps {####} and has no trailing period
+│   ├── git-hooks/pre-push      ← runs the shell checks before git push
+│   ├── install-git-hooks.sh    ← links that hook into this clone
 │   ├── setup-workflows.sh      ← write missing pull-request test workflows
 │   └── setup-workflows.test.sh ← writes those files in a temporary folder
 └── shared/
